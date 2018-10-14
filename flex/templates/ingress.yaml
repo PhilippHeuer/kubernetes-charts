@@ -1,0 +1,17 @@
+{{- if .Values.ingresses }}{{- range $ingress := .Values.ingresses}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: "{{ $.Release.Name }}-{{ $ingress.name }}"
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    {{- if $ingress.allowHttp }}
+    kubernetes.io/ingress.allow-http: "true"
+    {{- end }}
+    {{- if $ingress.sslRedirect }}
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    {{- end }}
+spec:
+  rules:
+{{ toYaml $ingress.rules | indent 2 }}
+{{- end }}{{- end }} # foreach ingress

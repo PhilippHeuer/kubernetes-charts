@@ -1,0 +1,65 @@
+{{- if .Values.deployments }}{{- range $deployment := .Values.deployments }}
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "{{ $.Release.Name }}-{{ $deployment.name }}"
+  labels:
+    app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $deployment.name }}"
+    app.kubernetes.io/name: {{ $deployment.name }}
+    app.kubernetes.io/version: {{ $deployment.version | quote }}
+    app.kubernetes.io/component: {{ $deployment.component }}
+    app.kubernetes.io/part-of: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/environment: {{ $.Values.environment }}
+spec:
+  replicas: {{ default 1 $deployment.replicaCount }}
+  strategy:
+    type: {{ $deployment.strategy.type }}
+    {{- if eq $deployment.strategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ $deployment.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ $deployment.strategy.rollingUpdate.maxSurge }}
+    {{- end }}
+  revisionHistoryLimit: {{ $deployment.revisionHistoryLimit }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $deployment.name }}"
+    spec:
+      containers:
+      {{- range $container := $deployment.containers}}
+        - name: {{ default $deployment.name $container.name }}
+          # image
+          image: {{ $container.imageRepository }}:{{ $container.imageTag }}
+          # ports
+          {{- if $container.ports }}
+          ports:
+          {{- range $port := $container.ports }}
+          - protocol: {{ $port.protocol }}
+            containerPort: {{ $port.containerPort }}
+          {{- end }}
+          {{- end }}
+          # resources
+          resources:
+            requests:
+              memory: {{ $container.resources.requests.memory }}
+              cpu: {{ $container.resources.requests.cpu }}
+            limits:
+              memory: {{ $container.resources.limits.memory }}
+              cpu: {{ $container.resources.limits.cpu }}
+          # graceful shutdown
+          terminationGracePeriodSeconds: {{ $container.terminationGracePeriodSeconds }}
+          # healthcheck
+          # - checks, if the container has started
+{{- if $container.readinessProbe }}
+          readinessProbe:
+{{ toYaml $container.readinessProbe | indent 12 }}
+{{- end }}
+          # - checks if the container is still healthy
+{{- if $container.livenessProbe }}
+          livenessProbe:
+{{ toYaml $container.livenessProbe | indent 12 }}
+{{- end }}
+          # end
+      {{- end }} # foreach container
+{{- end }}{{- end }} # foreach deployment
