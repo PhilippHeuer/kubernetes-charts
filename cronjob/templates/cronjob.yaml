@@ -1,0 +1,67 @@
+{{- if .Values.cronjobs }}{{- range $cronjob := .Values.cronjobs }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: "{{ $.Release.Name }}-{{ $cronjob.name }}"
+  labels:
+    app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $cronjob.name }}"
+    app.kubernetes.io/name: {{ $cronjob.name }}
+    app.kubernetes.io/version: {{ $cronjob.version | quote }}
+    app.kubernetes.io/component: "cronjob"
+    app.kubernetes.io/part-of: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/environment: {{ $.Values.environment }}
+spec:
+  schedule: "{{ $cronjob.schedule }}"
+  concurrencyPolicy: {{ $cronjob.concurrencyPolicy }}
+  startingDeadlineSeconds: {{ $cronjob.startingDeadlineSeconds }}
+  successfulJobsHistoryLimit: {{ default "3" $cronjob.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ default "3" $cronjob.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          {{- range $container := $cronjob.containers}}
+          - name: {{ $container.name }}
+            # image
+            image: {{ $container.imageRepository }}:{{ $container.imageTag }}
+            # ports
+            {{- if $container.ports }}
+            ports:
+            {{- range $port := $container.ports }}
+            - protocol: {{ $port.protocol }}
+              containerPort: {{ $port.containerPort }}
+            {{- end }}
+            {{- end }}
+            # environment
+            {{- if $container.env }}
+            env:
+{{ toYaml $container.env | indent 14 }}
+            {{- end }}
+            # resources
+            resources:
+              requests:
+                memory: {{ $container.resources.requests.memory }}
+                cpu: {{ $container.resources.requests.cpu }}
+              limits:
+                memory: {{ $container.resources.limits.memory }}
+                cpu: {{ $container.resources.limits.cpu }}
+            # graceful shutdown
+            terminationGracePeriodSeconds: {{ $container.terminationGracePeriodSeconds }}
+            # healthcheck
+            # - checks, if the container has started
+            {{- if $container.readinessProbe }}
+            readinessProbe:
+{{ toYaml $container.readinessProbe | indent 14 }}
+            {{- end }}
+            # - checks if the container is still healthy
+            {{- if $container.livenessProbe }}
+            livenessProbe:
+{{ toYaml $container.livenessProbe | indent 14 }}
+            {{- end }}
+            # end
+          {{- end }} # foreach container
+          # restartPolicy
+          restartPolicy: {{ default "Never" $cronjob.restartPolicy }}
+{{- end }}{{- end }} # foreach deployment

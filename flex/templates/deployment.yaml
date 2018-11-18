@@ -39,6 +39,11 @@ spec:
             containerPort: {{ $port.containerPort }}
           {{- end }}
           {{- end }}
+          # environment
+          {{- if $container.env }}
+          env:
+{{ toYaml $container.env | indent 12 }}
+          {{- end }}
           # resources
           resources:
             requests:
@@ -51,15 +56,17 @@ spec:
           terminationGracePeriodSeconds: {{ $container.terminationGracePeriodSeconds }}
           # healthcheck
           # - checks, if the container has started
-{{- if $container.readinessProbe }}
+          {{- if $container.readinessProbe }}
           readinessProbe:
 {{ toYaml $container.readinessProbe | indent 12 }}
-{{- end }}
+          {{- end }}
           # - checks if the container is still healthy
-{{- if $container.livenessProbe }}
+          {{- if $container.livenessProbe }}
           livenessProbe:
 {{ toYaml $container.livenessProbe | indent 12 }}
-{{- end }}
-          # end
+          {{- end }}
+        # end
       {{- end }} # foreach container
+      # restartPolicy
+      restartPolicy: {{ default "Always" $deployment.restartPolicy }}
 {{- end }}{{- end }} # foreach deployment

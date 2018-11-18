@@ -8,8 +8,7 @@ environment: development
 # Deployment Settings
 ###
 deployments:
-- # meta
-  name: 'app'
+- name: 'app'
   component: 'webserver'
   version: '1.15'
   # scaling
@@ -23,6 +22,15 @@ deployments:
       maxUnavailable: 0
       maxSurge: 1
   revisionHistoryLimit: 5
+  # autoscaling
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    cpuUtilization: 50
+  # restartPolicy
+  restartPolicy: 'Always'
+  # pods
   containers:
   - # name
     name: app
@@ -33,6 +41,10 @@ deployments:
     ports:
     - protocol: TCP
       containerPort: 80
+    # environment variables
+    env:
+    - name: SECRET_USERNAME
+      value: 'TOP_SECRET'
     # resources
     resources:
       requests:
@@ -58,13 +70,13 @@ deployments:
         port: 80
       initialDelaySeconds: 2
       periodSeconds: 2
+
 ###
 # Services
 # 
 ###
 services:
-- # service name
-  name: app
+- name: app
   # workload selector
   selector: app
   # ports
@@ -77,18 +89,54 @@ services:
 # Ingresses
 ###
 ingresses:
-- # name
-  name: app
+- name: app
   # allow http traffic
   allowHttp: true
   # redirect http requests to https
   sslRedirect: false
-  # rules
+  # target
   rules:
   - host: nginx.philippheuer.me
     http:
       paths:
       - path: /
         backend:
-          serviceName: nginx-app
+          serviceSelector: app
           servicePort: 80
+
+###
+# Cronjobs
+###
+cronjobs:
+- # name
+  name: app
+  # cronjob schedule
+  schedule: "0 * * * *"
+  # Allow parralel execution for this cronjob: Allow, Forbid
+  concurrencyPolicy: Forbid
+  # only run within x seconds of the scheduled time, otherwise skip the next execution
+  startingDeadlineSeconds: 60
+  # specify how many completed and failed jobs should be kept in the kubernetes job history
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  # containers
+  containers:
+  - # name
+    name: app
+    # image
+    imageRepository: docker.io/nginx
+    imageTag: '1.15-alpine'
+    # ports
+    ports:
+    - protocol: TCP
+      containerPort: 80
+    # resources
+    resources:
+      requests:
+        memory: '64Mi'
+        cpu: '250m'
+      limits:
+        memory: '128Mi'
+        cpu: '500m'
+    # graceful shutdown
+    terminationGracePeriodSeconds: 15

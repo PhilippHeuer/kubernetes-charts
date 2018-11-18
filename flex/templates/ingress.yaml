@@ -1,4 +1,5 @@
-{{- if .Values.ingresses }}{{- range $ingress := .Values.ingresses}}
+{{- if .Values.ingresses }}
+{{- range $ingress := .Values.ingresses}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -12,6 +13,22 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     {{- end }}
 spec:
+  {{- if $ingress.rules }}
   rules:
-{{ toYaml $ingress.rules | indent 2 }}
-{{- end }}{{- end }} # foreach ingress
+  {{- range $rule := $ingress.rules }}
+  - host: "{{ $rule.host }}"
+    # type: HTTP
+    {{- if $rule.http }}
+    http:
+      paths:
+      {{- range $path := $rule.http.paths }}
+      - path: "{{ $path.path }}"
+        backend:
+          serviceName: "{{ $.Release.Name }}-{{ $path.backend.serviceSelector }}"
+          servicePort: {{ $path.backend.servicePort }}
+      {{- end }} # endforeach paths
+    {{- end }} # endif rule.http
+  {{- end }} # endforeach rule
+  {{- end }} # endif rules
+{{- end }} # endforeach ingress
+{{- end }} # endif ingress

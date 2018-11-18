@@ -1,0 +1,47 @@
+{{- if .Values.cronjobs }}{{- range $cronjob := .Values.cronjobs }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: "{{ $.Release.Name }}-{{ $cronjob.name }}"
+  labels:
+    app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $cronjob.name }}"
+    app.kubernetes.io/name: {{ $cronjob.name }}
+    app.kubernetes.io/version: {{ $cronjob.version | quote }}
+    app.kubernetes.io/component: "cronjob"
+    app.kubernetes.io/part-of: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/environment: {{ $.Values.environment }}
+spec:
+  schedule: "{{ $cronjob.schedule }}"
+  concurrencyPolicy: {{ $cronjob.concurrencyPolicy }}
+  startingDeadlineSeconds: {{ $cronjob.startingDeadlineSeconds }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            {{- range $container := $cronjob.containers}}
+          - name: {{ $cronjob.name }}
+            # image
+            image: {{ $container.imageRepository }}:{{ $container.imageTag }}
+            # ports
+            {{- if $container.ports }}
+            ports:
+            {{- range $port := $container.ports }}
+            - protocol: {{ $port.protocol }}
+              containerPort: {{ $port.containerPort }}
+            {{- end }}
+            {{- end }}
+            # resources
+            resources:
+              requests:
+                memory: {{ $container.resources.requests.memory }}
+                cpu: {{ $container.resources.requests.cpu }}
+              limits:
+                memory: {{ $container.resources.limits.memory }}
+                cpu: {{ $container.resources.limits.cpu }}
+            # graceful shutdown
+            terminationGracePeriodSeconds: {{ $container.terminationGracePeriodSeconds }}
+        {{- end }} # foreach container
+          restartPolicy: OnFailure
+{{- end }}{{- end }} # foreach deployment

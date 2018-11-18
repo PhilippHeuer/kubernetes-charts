@@ -1,0 +1,47 @@
+###
+# Global Settings
+###
+id: nginx
+environment: development
+
+###
+# Cronjobs
+###
+cronjobs:
+- name: app
+  version: '1.0'
+  # cronjob schedule
+  schedule: '0 * * * *'
+  # Allow parralel execution for this cronjob: Allow, Forbid
+  concurrencyPolicy: Forbid
+  # only run within x seconds of the scheduled time, otherwise skip the next execution
+  startingDeadlineSeconds: 60
+  # specify how many completed and failed jobs should be kept in the kubernetes job history
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  # containers
+  containers:
+  - name: app
+    # image
+    imageRepository: docker.io/nginx
+    imageTag: '1.15-alpine'
+    # ports
+    ports:
+    - protocol: TCP
+      containerPort: 80
+    # environment variables
+    env:
+    - name: SECRET_USERNAME
+      value: 'TOP_SECRET'
+    # resources
+    resources:
+      requests:
+        memory: '64Mi'
+        cpu: '250m'
+      limits:
+        memory: '128Mi'
+        cpu: '500m'
+    # graceful shutdown
+    terminationGracePeriodSeconds: 15
+    # restart policy ("OnFailure", "Never")
+    restartPolicy: Never
