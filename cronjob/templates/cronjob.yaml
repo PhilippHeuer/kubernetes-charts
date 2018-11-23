@@ -49,6 +49,8 @@ spec:
                 cpu: {{ $container.resources.limits.cpu }}
             # graceful shutdown
             terminationGracePeriodSeconds: {{ $container.terminationGracePeriodSeconds }}
+            # imagePullPolicy Always/IfNotPresent
+            imagePullPolicy: {{ default "IfNotPresent" $cronjob.imagePullPolicy }}
             # healthcheck
             # - checks, if the container has started
             {{- if $container.readinessProbe }}
@@ -62,8 +64,4 @@ spec:
             {{- end }}
             # end
           {{- end }} # foreach container
-          # restartPolicy
-          restartPolicy: {{ default "Never" $cronjob.restartPolicy }}
-          # imagePullPolicy Always/IfNotPresent
-          imagePullPolicy: {{ default "IfNotPresent" $cronjob.imagePullPolicy }}
 {{- end }}{{- end }} # foreach deployment

@@ -28,8 +28,6 @@ deployments:
     minReplicas: 1
     maxReplicas: 3
     cpuUtilization: 50
-  # restart policy
-  restartPolicy: Never
   # imagePullPolicy Always/IfNotPresent
   imagePullPolicy: IfNotPresent
   # pods
