@@ -50,7 +50,7 @@ spec:
             # graceful shutdown
             terminationGracePeriodSeconds: {{ $container.terminationGracePeriodSeconds }}
             # imagePullPolicy Always/IfNotPresent
-            imagePullPolicy: {{ default "IfNotPresent" $cronjob.imagePullPolicy }}
+            imagePullPolicy: {{ default "IfNotPresent" $container.imagePullPolicy }}
             # healthcheck
             # - checks, if the container has started
             {{- if $container.readinessProbe }}
