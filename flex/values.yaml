@@ -28,8 +28,10 @@ deployments:
     minReplicas: 1
     maxReplicas: 3
     cpuUtilization: 50
-  # restartPolicy
-  restartPolicy: 'Always'
+  # restart policy
+  restartPolicy: Never
+  # imagePullPolicy Always/IfNotPresent
+  imagePullPolicy: IfNotPresent
   # pods
   containers:
   - # name
@@ -94,7 +96,7 @@ ingresses:
   allowHttp: true
   # redirect http requests to https
   sslRedirect: false
-  # target
+  # rules
   rules:
   - host: nginx.philippheuer.me
     http:
@@ -140,3 +142,5 @@ cronjobs:
         cpu: '500m'
     # graceful shutdown
     terminationGracePeriodSeconds: 15
+    # imagePullPolicy
+    imagePullPolicy: Always

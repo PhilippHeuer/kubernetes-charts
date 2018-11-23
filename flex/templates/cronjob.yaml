@@ -43,5 +43,8 @@ spec:
             # graceful shutdown
             terminationGracePeriodSeconds: {{ $container.terminationGracePeriodSeconds }}
         {{- end }} # foreach container
+          # restartPolicy
           restartPolicy: OnFailure
+          # imagePullPolicy Always/IfNotPresent
+          imagePullPolicy: {{ default "IfNotPresent" $cronjob.imagePullPolicy }}
 {{- end }}{{- end }} # foreach deployment

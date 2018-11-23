@@ -45,3 +45,5 @@ cronjobs:
     terminationGracePeriodSeconds: 15
     # restart policy ("OnFailure", "Never")
     restartPolicy: Never
+    # imagePullPolicy Always/IfNotPresent
+    imagePullPolicy: IfNotPresent

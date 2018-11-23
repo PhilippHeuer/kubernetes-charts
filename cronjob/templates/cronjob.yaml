@@ -64,4 +64,6 @@ spec:
           {{- end }} # foreach container
           # restartPolicy
           restartPolicy: {{ default "Never" $cronjob.restartPolicy }}
+          # imagePullPolicy Always/IfNotPresent
+          imagePullPolicy: {{ default "IfNotPresent" $cronjob.imagePullPolicy }}
 {{- end }}{{- end }} # foreach deployment

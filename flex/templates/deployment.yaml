@@ -69,4 +69,6 @@ spec:
       {{- end }} # foreach container
       # restartPolicy
       restartPolicy: {{ default "Always" $deployment.restartPolicy }}
+      # imagePullPolicy Always/IfNotPresent
+      imagePullPolicy: {{ default "IfNotPresent" $deployment.imagePullPolicy }}
 {{- end }}{{- end }} # foreach deployment
