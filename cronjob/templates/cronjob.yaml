@@ -64,4 +64,6 @@ spec:
             {{- end }}
             # end
           {{- end }} # foreach container
+          # restartPolicy
+          restartPolicy: {{ default "Never" $cronjob.restartPolicy }}
 {{- end }}{{- end }} # foreach deployment
