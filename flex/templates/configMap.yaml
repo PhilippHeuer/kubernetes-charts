@@ -1,0 +1,16 @@
+{{- if .Values.configmaps }}{{- range $configmap := .Values.configmaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ $.Release.Name }}-{{ $configmap.name }}"
+  labels:
+    app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $configmap.name }}"
+    app.kubernetes.io/name: {{ $configmap.name }}
+    app.kubernetes.io/version: {{ $configmap.version | quote }}
+    app.kubernetes.io/component: "configmap"
+    app.kubernetes.io/part-of: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/environment: {{ $.Values.environment }}
+data:
+{{ toYaml $configmap.data | indent 2 }}
+{{- end }}{{- end }}

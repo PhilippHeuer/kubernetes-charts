@@ -47,4 +47,4 @@ spec:
           restartPolicy: OnFailure
           # imagePullPolicy Always/IfNotPresent
           imagePullPolicy: {{ default "IfNotPresent" $cronjob.imagePullPolicy }}
-{{- end }}{{- end }} # foreach deployment
+{{- end }}{{- end }}

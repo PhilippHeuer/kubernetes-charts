@@ -1,5 +1,5 @@
 {{- if .Values.deployments }}{{- range $deployment := .Values.deployments }}
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: "{{ $.Release.Name }}-{{ $deployment.name }}"
@@ -12,6 +12,9 @@ metadata:
     app.kubernetes.io/managed-by: {{ $.Release.Service }}
     app.kubernetes.io/environment: {{ $.Values.environment }}
 spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $deployment.name }}"
   replicas: {{ default 1 $deployment.replicaCount }}
   strategy:
     type: {{ $deployment.strategy.type }}
@@ -26,12 +29,33 @@ spec:
       labels:
         app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $deployment.name }}"
     spec:
+      ###
+      # Begin Containers
+      ###
       containers:
       {{- range $container := $deployment.containers}}
         - name: {{ default $deployment.name $container.name }}
-          # image
+          ###
+          # Container - Image
+          ###
           image: {{ $container.imageRepository }}:{{ $container.imageTag }}
-          # ports
+          {{- if $container.command }}
+          ###
+          # Container - Command / Entrypoint
+          ###
+          command:
+{{ toYaml $container.command | indent 12 }}
+          {{- end }}
+          ###
+          # Container - Arguments
+          ###
+          {{- if $container.args }}
+          args:
+{{ toYaml $container.args | indent 12 }}
+          {{- end }}
+          ###
+          # Ports
+          ###
           {{- if $container.ports }}
           ports:
           {{- range $port := $container.ports }}
@@ -39,12 +63,31 @@ spec:
             containerPort: {{ $port.containerPort }}
           {{- end }}
           {{- end }}
-          # environment
+          ###
+          # Environment
+          ###
           {{- if $container.env }}
           env:
 {{ toYaml $container.env | indent 12 }}
           {{- end }}
-          # resources
+          ###
+          # Security Context
+          ###
+          {{- if $container.securityContext }}
+          securityContext:
+            {{- if $container.securityContext.capabilities }}
+            capabilities:
+              {{- if $container.securityContext.capabilities.add }}
+              add:
+                {{- range $cap := $container.securityContext.capabilities.add }}
+                - {{ $cap }}
+                {{- end }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          ###
+          # Resource limitations
+          ###
           resources:
             requests:
               memory: {{ $container.resources.requests.memory }}
@@ -52,21 +95,80 @@ spec:
             limits:
               memory: {{ $container.resources.limits.memory }}
               cpu: {{ $container.resources.limits.cpu }}
-          # graceful shutdown
+          ###
+          # Time for a graceful shutdown
+          ###
           terminationGracePeriodSeconds: {{ $container.terminationGracePeriodSeconds }}
-          # imagePullPolicy Always/IfNotPresent
+          ###
+          # Image Pull Policy
+          # Values: Always/IfNotPresent
+          ###
           imagePullPolicy: {{ default "IfNotPresent" $deployment.imagePullPolicy }}
-          # healthcheck
-          # - checks, if the container has started
+          ###
+          # Healthcheck - Readiness
+          # checks, if the container has started
+          ###
           {{- if $container.readinessProbe }}
           readinessProbe:
 {{ toYaml $container.readinessProbe | indent 12 }}
           {{- end }}
-          # - checks if the container is still healthy
+          ###
+          # Healthcheck - Liveness
+          # checks if the container is still healthy
+          ###
           {{- if $container.livenessProbe }}
           livenessProbe:
 {{ toYaml $container.livenessProbe | indent 12 }}
           {{- end }}
-        # end
-      {{- end }} # foreach container
-{{- end }}{{- end }} # foreach deployment
+          ###
+          # Volume Mounts
+          ###
+          {{- if $container.volumeMounts }}
+          volumeMounts:
+{{ toYaml $container.volumeMounts | indent 12 }}
+          {{- end }}
+        ###
+        # End Containers
+        ###
+      {{- end }}
+      ###
+      # Begin Volumes
+      ###
+      {{- if $deployment.volumes }}
+      volumes:
+      {{- range $volume := $deployment.volumes }}
+      - name: {{ $volume.name }}
+        ###
+        # Type: ConfigMap
+        ###
+        {{- if $volume.configMap }}
+        configMap:
+          ###
+          # Static Selector: Name
+          ###
+          {{- if $volume.configMap.name }}
+          name: {{ $volume.configMap.name }}
+          {{- end }}
+          ###
+          # Dynamic Selector: Current Release
+          ###
+          {{- if $volume.configMap.selector }}
+          name: "{{ $.Release.Name }}-{{ $volume.configMap.selector }}"
+          {{- end }}
+        ###
+        # Type: EmptyDir
+        ###
+        {{- else if $volume.emptyDir }}
+        emptyDir: {}
+        ###
+        # Type: Other
+        ###
+        {{- else }}
+{{ toYaml $volume | indent 8 }}
+        {{- end }}
+      {{- end }}
+      ###
+      # End Volumes
+      ###
+    {{- end }}
+{{- end }}{{- end }}
