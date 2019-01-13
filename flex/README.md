@@ -124,8 +124,7 @@ services:
 # Ingresses
 ###
 ingresses:
-- # name
-  name: app
+- name: app
   # allow http traffic
   allowHttp: true
   # redirect http requests to https
@@ -139,6 +138,18 @@ ingresses:
         backend:
           serviceSelector: app
           servicePort: 80
+
+###
+# Storage
+###
+storage:
+- name: main
+  storageClassName: "slow"
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 
 ###
 # Cronjobs

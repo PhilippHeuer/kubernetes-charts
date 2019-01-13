@@ -26,6 +26,11 @@ services: []
 ingresses: []
 
 ###
+# Storage
+###
+storage: []
+
+###
 # Cronjobs
 ###
 cronjobs: []

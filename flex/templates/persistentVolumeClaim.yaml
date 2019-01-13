@@ -1,0 +1,30 @@
+{{- if .Values.storage }}{{- range $item := .Values.storage}}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: "{{ $.Release.Name }}-{{ $item.name }}"
+spec:
+  ###
+  # Storage Class, uses default if not set
+  ###
+  {{- if $item.storageClassName }}
+  storageClassName: {{ $item.storageClassName }}
+  {{- end }}
+  ###
+  # Access Modes (ReadWriteOnce/)
+  ###
+  accessModes:
+  {{- range $accessMode := $item.accessModes }}
+    - {{ $accessMode }}
+  {{- end }}
+  ###
+  # Volume Mode (Filesystem/Block)
+  ###
+  volumeMode: {{ default "Filesystem" $item.Filesystem }}
+  ###
+  # Volume Size
+  ###
+  resources:
+    requests:
+      storage: {{ default "1Gi" $item.resources.requests.storage }}
+{{- end }}{{- end }}

@@ -143,15 +143,11 @@ spec:
         ###
         {{- if $volume.configMap }}
         configMap:
-          ###
           # Static Selector: Name
-          ###
           {{- if $volume.configMap.name }}
           name: {{ $volume.configMap.name }}
           {{- end }}
-          ###
           # Dynamic Selector: Current Release
-          ###
           {{- if $volume.configMap.selector }}
           name: "{{ $.Release.Name }}-{{ $volume.configMap.selector }}"
           {{- end }}
@@ -160,6 +156,19 @@ spec:
         ###
         {{- else if $volume.emptyDir }}
         emptyDir: {}
+        ###
+        # PersistentVolumeClaim
+        ###
+        {{- else if $volume.persistentVolumeClaim }}
+        persistentVolumeClaim:
+          # Static Selector
+          {{- if $volume.persistentVolumeClaim.claimName }}
+          claimName: "{{ $volume.persistentVolumeClaim.claimName }}"
+          {{- end }}
+          # Dynamic Selector
+          {{- if $volume.persistentVolumeClaim.claimNameSelector }}
+          claimName: "{{ $.Release.Name }}-{{ $volume.persistentVolumeClaim.claimNameSelector }}"
+          {{- end }}
         ###
         # Type: Other
         ###
