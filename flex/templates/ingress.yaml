@@ -6,11 +6,18 @@ metadata:
   name: "{{ $.Release.Name }}-{{ $ingress.name }}"
   annotations:
     kubernetes.io/ingress.class: "nginx"
-    {{- if $ingress.allowHttp }}
+    {{- if $ingress.enableSSL }}
+    kubernetes.io/ingress.allow-http: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    {{- else }}
     kubernetes.io/ingress.allow-http: "true"
-    {{- end }}
-    {{- if $ingress.sslRedirect }}
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    {{- end }}
+    {{- if $ingress.tlsAcme }}
+    kubernetes.io/tls-acme: "true"
+    {{- end }}
+    {{- if $ingress.clusterIssuer }}
+    certmanager.k8s.io/cluster-issuer: {{ $ingress.clusterIssuer }}
     {{- end }}
 spec:
   {{- if $ingress.rules }}
@@ -30,5 +37,16 @@ spec:
     {{- end }} # endif rule.http
   {{- end }} # endforeach rule
   {{- end }} # endif rules
+  ###
+  # SSL
+  ###
+  {{- if $ingress.enableSSL }}
+  tls:
+  {{- range $rule := $ingress.rules }}
+  - hosts:
+    - "{{ $rule.host }}"
+    secretName: "{{ $rule.host | replace "." "-" }}-tls"
+  {{- end }}
+  {{- end }}
 {{- end }} # endforeach ingress
 {{- end }} # endif ingress
