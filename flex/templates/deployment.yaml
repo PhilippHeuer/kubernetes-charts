@@ -30,6 +30,18 @@ spec:
         app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $deployment.name }}"
     spec:
       ###
+      # Security Context
+      ###
+      {{- if $deployment.securityContext }}
+      securityContext:
+        {{- if $deployment.securityContext.runAsUser }}
+        runAsUser: {{ $deployment.securityContext.runAsUser }}
+        {{- end }}
+        {{- if $deployment.securityContext.fsGroup }}
+        fsGroup: {{ $deployment.securityContext.fsGroup }}
+        {{- end }}
+      {{- end }}
+      ###
       # Begin Containers
       ###
       containers:
