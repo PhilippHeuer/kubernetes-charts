@@ -3,6 +3,7 @@ apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: "{{ $.Release.Name }}-{{ $cronjob.name }}"
+  namespace: "{{ $.Release.Namespace }}"
   labels:
     app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $cronjob.name }}"
     app.kubernetes.io/name: {{ $cronjob.name }}

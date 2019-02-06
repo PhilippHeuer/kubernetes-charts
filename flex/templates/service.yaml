@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: "{{ $.Release.Name }}-{{ $service.name }}"
+  namespace: "{{ $.Release.Namespace }}"
 spec:
   {{- if $service.ports }}
   ports:

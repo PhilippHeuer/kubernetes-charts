@@ -4,6 +4,7 @@ apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
   name: "{{ $.Release.Name }}-{{ $deployment.name }}"
+  namespace: "{{ $.Release.Namespace }}"
   labels:
     app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $deployment.name }}"
     app.kubernetes.io/name: {{ $deployment.name }}

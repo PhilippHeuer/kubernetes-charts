@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: "{{ $.Release.Name }}-{{ $item.name }}"
+  namespace: "{{ $.Release.Namespace }}"
 spec:
   ###
   # Storage Class, uses default if not set

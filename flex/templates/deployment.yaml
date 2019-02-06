@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: "{{ $.Release.Name }}-{{ $deployment.name }}"
+  namespace: "{{ $.Release.Namespace }}"
   labels:
     app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $deployment.name }}"
     app.kubernetes.io/name: {{ $deployment.name }}
