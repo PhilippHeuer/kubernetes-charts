@@ -1,0 +1,191 @@
+{{- if .Values.daemonSets }}{{- range $daemonSet := .Values.daemonSets }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: "{{ $.Release.Name }}-{{ $daemonSet.name }}"
+  namespace: "{{ $.Release.Namespace }}"
+  labels:
+    app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $daemonSet.name }}"
+    app.kubernetes.io/name: {{ $daemonSet.name }}
+    app.kubernetes.io/version: {{ $daemonSet.version | quote }}
+    app.kubernetes.io/component: {{ $daemonSet.component }}
+    app.kubernetes.io/part-of: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/environment: {{ $.Values.environment }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $daemonSet.name }}"
+  strategy:
+    type: {{ $daemonSet.strategy.type }}
+    {{- if eq $daemonSet.strategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ $daemonSet.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ $daemonSet.strategy.rollingUpdate.maxSurge }}
+    {{- end }}
+  revisionHistoryLimit: {{ $daemonSet.revisionHistoryLimit }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $daemonSet.name }}"
+    spec:
+      ###
+      # Security Context
+      ###
+      {{- if $daemonSet.securityContext }}
+      securityContext:
+        {{- if $daemonSet.securityContext.runAsUser }}
+        runAsUser: {{ $daemonSet.securityContext.runAsUser }}
+        {{- end }}
+        {{- if $daemonSet.securityContext.fsGroup }}
+        fsGroup: {{ $daemonSet.securityContext.fsGroup }}
+        {{- end }}
+      {{- end }}
+      ###
+      # Begin Containers
+      ###
+      containers:
+      {{- range $container := $daemonSet.containers}}
+        - name: {{ default $daemonSet.name $container.name }}
+          ###
+          # Container - Image
+          ###
+          image: {{ $container.imageRepository }}:{{ $container.imageTag }}
+          {{- if $container.command }}
+          ###
+          # Container - Command / Entrypoint
+          ###
+          command:
+{{ toYaml $container.command | indent 12 }}
+          {{- end }}
+          ###
+          # Container - Arguments
+          ###
+          {{- if $container.args }}
+          args:
+{{ toYaml $container.args | indent 12 }}
+          {{- end }}
+          ###
+          # Ports
+          ###
+          {{- if $container.ports }}
+          ports:
+          {{- range $port := $container.ports }}
+          - protocol: {{ $port.protocol }}
+            containerPort: {{ $port.containerPort }}
+          {{- end }}
+          {{- end }}
+          ###
+          # Environment
+          ###
+          {{- if $container.env }}
+          env:
+{{ toYaml $container.env | indent 12 }}
+          {{- end }}
+          ###
+          # Security Context
+          ###
+          {{- if $container.securityContext }}
+          securityContext:
+            {{- if $container.securityContext.capabilities }}
+            capabilities:
+              {{- if $container.securityContext.capabilities.add }}
+              add:
+                {{- range $cap := $container.securityContext.capabilities.add }}
+                - {{ $cap }}
+                {{- end }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          ###
+          # Resource limitations
+          ###
+          resources:
+            requests:
+              memory: {{ $container.resources.requests.memory }}
+              cpu: {{ $container.resources.requests.cpu }}
+            limits:
+              memory: {{ $container.resources.limits.memory }}
+              cpu: {{ $container.resources.limits.cpu }}
+          ###
+          # Image Pull Policy
+          # Values: Always/IfNotPresent
+          ###
+          imagePullPolicy: {{ default "IfNotPresent" $daemonSet.imagePullPolicy }}
+          ###
+          # Healthcheck - Readiness
+          # checks, if the container has started
+          ###
+          {{- if $container.readinessProbe }}
+          readinessProbe:
+{{ toYaml $container.readinessProbe | indent 12 }}
+          {{- end }}
+          ###
+          # Healthcheck - Liveness
+          # checks if the container is still healthy
+          ###
+          {{- if $container.livenessProbe }}
+          livenessProbe:
+{{ toYaml $container.livenessProbe | indent 12 }}
+          {{- end }}
+          ###
+          # Volume Mounts
+          ###
+          {{- if $container.volumeMounts }}
+          volumeMounts:
+{{ toYaml $container.volumeMounts | indent 12 }}
+          {{- end }}
+        ###
+        # End Containers
+        ###
+      {{- end }}
+      ###
+      # Begin Volumes
+      ###
+      {{- if $daemonSet.volumes }}
+      volumes:
+      {{- range $volume := $daemonSet.volumes }}
+      - name: {{ $volume.name }}
+        ###
+        # Type: ConfigMap
+        ###
+        {{- if $volume.configMap }}
+        configMap:
+          # Static Selector: Name
+          {{- if $volume.configMap.name }}
+          name: {{ $volume.configMap.name }}
+          {{- end }}
+          # Dynamic Selector: Current Release
+          {{- if $volume.configMap.selector }}
+          name: "{{ $.Release.Name }}-{{ $volume.configMap.selector }}"
+          {{- end }}
+        ###
+        # Type: EmptyDir
+        ###
+        {{- else if $volume.emptyDir }}
+        emptyDir: {}
+        ###
+        # PersistentVolumeClaim
+        ###
+        {{- else if $volume.persistentVolumeClaim }}
+        persistentVolumeClaim:
+          # Static Selector
+          {{- if $volume.persistentVolumeClaim.claimName }}
+          claimName: "{{ $volume.persistentVolumeClaim.claimName }}"
+          {{- end }}
+          # Dynamic Selector
+          {{- if $volume.persistentVolumeClaim.claimNameSelector }}
+          claimName: "{{ $.Release.Name }}-{{ $volume.persistentVolumeClaim.claimNameSelector }}"
+          {{- end }}
+        ###
+        # Type: Other
+        ###
+        {{- else }}
+{{ toYaml $volume | indent 8 }}
+        {{- end }}
+      {{- end }}
+      ###
+      # End Volumes
+      ###
+    {{- end }}
+{{- end }}{{- end }}
