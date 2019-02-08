@@ -16,14 +16,6 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $daemonSet.name }}"
-  strategy:
-    type: {{ $daemonSet.strategy.type }}
-    {{- if eq $daemonSet.strategy.type "RollingUpdate" }}
-    rollingUpdate:
-      maxUnavailable: {{ $daemonSet.strategy.rollingUpdate.maxUnavailable }}
-      maxSurge: {{ $daemonSet.strategy.rollingUpdate.maxSurge }}
-    {{- end }}
-  revisionHistoryLimit: {{ $daemonSet.revisionHistoryLimit }}
   template:
     metadata:
       labels:
