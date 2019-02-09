@@ -5,6 +5,7 @@ metadata:
   name: "{{ $.Release.Name }}-{{ $service.name }}"
   namespace: "{{ $.Release.Namespace }}"
 spec:
+  type: {{ default "ClusterIP" $service.type }}
   {{- if $service.ports }}
   ports:
   {{- range $port := $service.ports }}
