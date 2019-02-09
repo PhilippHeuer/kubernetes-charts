@@ -74,6 +74,9 @@ spec:
           {{- range $port := $container.ports }}
           - protocol: {{ $port.protocol }}
             containerPort: {{ $port.containerPort }}
+            {{- if $port.hostPort }}
+            hostPort: {{ $port.hostPort }}
+            {{- end }}
           {{- end }}
           {{- end }}
           ###
