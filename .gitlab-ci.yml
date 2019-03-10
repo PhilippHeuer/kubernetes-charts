@@ -40,7 +40,7 @@ pages:
   - helm init --client-only --skip-refresh
   script:
   - echo "Publishing `/public` to gitlab pages ..."
-  - envcli run helm repo index ./public
+  - helm repo index ./public
   artifacts:
     paths:
     - public
