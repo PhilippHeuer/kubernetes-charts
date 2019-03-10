@@ -1,53 +1,45 @@
-{{- if .Values.deployments }}{{- range $deployment := .Values.deployments }}
+{{- if .Values.daemonSets }}{{- range $daemonSet := .Values.daemonSets }}
+---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
-  name: "{{ $.Release.Name }}-{{ $deployment.name }}"
+  name: "{{ $.Release.Name }}-{{ $daemonSet.name }}"
   namespace: "{{ $.Release.Namespace }}"
   labels:
-    app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $deployment.name }}"
-    app.kubernetes.io/name: {{ $deployment.name }}
-    app.kubernetes.io/version: {{ $deployment.version | quote }}
-    app.kubernetes.io/component: {{ $deployment.component }}
+    app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $daemonSet.name }}"
+    app.kubernetes.io/name: {{ $daemonSet.name }}
+    app.kubernetes.io/version: {{ $daemonSet.version | quote }}
+    app.kubernetes.io/component: {{ $daemonSet.component }}
     app.kubernetes.io/part-of: {{ $.Release.Name }}
     app.kubernetes.io/managed-by: {{ $.Release.Service }}
     app.kubernetes.io/environment: {{ $.Values.environment }}
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $deployment.name }}"
-  replicas: {{ default 1 $deployment.replicaCount }}
-  strategy:
-    type: {{ $deployment.strategy.type }}
-    {{- if eq $deployment.strategy.type "RollingUpdate" }}
-    rollingUpdate:
-      maxUnavailable: {{ $deployment.strategy.rollingUpdate.maxUnavailable }}
-      maxSurge: {{ $deployment.strategy.rollingUpdate.maxSurge }}
-    {{- end }}
-  revisionHistoryLimit: {{ $deployment.revisionHistoryLimit }}
+      app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $daemonSet.name }}"
   template:
     metadata:
       labels:
-        app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $deployment.name }}"
+        app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $daemonSet.name }}"
     spec:
       ###
       # Security Context
       ###
-      {{- if $deployment.securityContext }}
+      {{- if $daemonSet.securityContext }}
       securityContext:
-        {{- if $deployment.securityContext.runAsUser }}
-        runAsUser: {{ $deployment.securityContext.runAsUser }}
+        {{- if $daemonSet.securityContext.runAsUser }}
+        runAsUser: {{ $daemonSet.securityContext.runAsUser }}
         {{- end }}
-        {{- if $deployment.securityContext.fsGroup }}
-        fsGroup: {{ $deployment.securityContext.fsGroup }}
+        {{- if $daemonSet.securityContext.fsGroup }}
+        fsGroup: {{ $daemonSet.securityContext.fsGroup }}
         {{- end }}
       {{- end }}
       ###
       # Begin Containers
       ###
       containers:
-      {{- range $container := $deployment.containers}}
-        - name: {{ default $deployment.name $container.name }}
+      {{- range $container := $daemonSet.containers}}
+        - name: {{ default $daemonSet.name $container.name }}
           ###
           # Container - Image
           ###
@@ -74,9 +66,6 @@ spec:
           {{- range $port := $container.ports }}
           - protocol: {{ $port.protocol }}
             containerPort: {{ $port.containerPort }}
-            {{- if $port.hostPort }}
-            hostPort: {{ $port.hostPort }}
-            {{- end }}
           {{- end }}
           {{- end }}
           ###
@@ -112,14 +101,10 @@ spec:
               memory: {{ $container.resources.limits.memory }}
               cpu: {{ $container.resources.limits.cpu }}
           ###
-          # Time for a graceful shutdown
-          ###
-          terminationGracePeriodSeconds: {{ $container.terminationGracePeriodSeconds }}
-          ###
           # Image Pull Policy
           # Values: Always/IfNotPresent
           ###
-          imagePullPolicy: {{ default "IfNotPresent" $deployment.imagePullPolicy }}
+          imagePullPolicy: {{ default "IfNotPresent" $daemonSet.imagePullPolicy }}
           ###
           # Healthcheck - Readiness
           # checks, if the container has started
@@ -150,9 +135,9 @@ spec:
       ###
       # Begin Volumes
       ###
-      {{- if $deployment.volumes }}
+      {{- if $daemonSet.volumes }}
       volumes:
-      {{- range $volume := $deployment.volumes }}
+      {{- range $volume := $daemonSet.volumes }}
       - name: {{ $volume.name }}
         ###
         # Type: ConfigMap

@@ -1,5 +1,6 @@
 {{- if .Values.ingresses }}
 {{- range $ingress := .Values.ingresses}}
+---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:

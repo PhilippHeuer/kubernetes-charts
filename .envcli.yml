@@ -1,20 +1,9 @@
 images:
-# Infrastructure
-# - Kubernetes
-- name: KubeCTL
-  description: Use the Kubernetes command-line tool, kubectl, to deploy and manage applications on Kubernetes.
-  provides:
-  - kubectl
-  image: docker.io/envcli/kubectl:1.12.0
-  shell: sh
-  cache:
-  - name: kubectl
-    directory: /root/.kube
 - name: Helm Client
   description: Helm is a tool for managing Kubernetes charts. Charts are packages of pre-configured Kubernetes resources.
   provides:
   - helm
-  image: docker.io/envcli/helm:2.11.0
+  image: docker.io/envcli/helm:2.13.0
   shell: sh
   directory: /data
   cache:

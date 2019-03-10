@@ -1,16 +1,48 @@
+###
+# EnvCLI
+###
 image: docker.io/envcli/envcli:latest
 
-stages:
-- deploy
-
+###
+# Services
+###
 services:
 - docker:stable-dind
 
-deploy:
-  stage: deploy
-  script:
+###
+# Stages
+###
+stages:
+- build
+- deploy
+
+###
+# Build Charts
+###
+build:
+  stage: build
+  before_script:
   - helm init --client-only --skip-refresh
-  - cd $CI_PROJECT_DIR/flex
-  - helm package flex
-  - cd $CI_PROJECT_DIR/cronjob
-  - helm package cronjob
+  variables:
+    REPO_DIR: $CI_PROJECT_DIR/stable
+  script:
+  - ./ci/build-charts.sh
+  artifacts:
+    paths:
+    - public
+
+###
+# Build & Publish Charts on GitLab Pages
+###
+pages:
+  stage: deploy
+  before_script:
+  - helm init --client-only --skip-refresh
+  script:
+  - echo "Publishing `/public` to gitlab pages ..."
+  - helm repo index ./public
+  artifacts:
+    paths:
+    - public
+  only:
+  - master
