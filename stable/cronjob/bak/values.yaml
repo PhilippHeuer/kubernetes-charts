@@ -1,14 +1,7 @@
-# Cronjob
-
-This chart allows you to deploy cronjob in your kubernetes cluster.
-
-## Example
-
-```yaml
 ###
 # Global Settings
 ###
-id: systemName
+id: nginx
 environment: development
 
 ###
@@ -22,20 +15,26 @@ cronjobs:
   # Allow parralel execution for this cronjob: Allow, Forbid
   concurrencyPolicy: Forbid
   # only run within x seconds of the scheduled time, otherwise skip the next execution
-  startingDeadlineSeconds: 15
+  startingDeadlineSeconds: 60
   # specify how many completed and failed jobs should be kept in the kubernetes job history
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
+  # restart policy ("OnFailure", "Never")
+  restartPolicy: Never
   # containers
   containers:
   - name: app
     # image
-    imageRepository: docker.io/hello-world
-    imageTag: 'latest'
+    imageRepository: docker.io/nginx
+    imageTag: '1.15-alpine'
     # ports
-    ports: []
+    ports:
+    - protocol: TCP
+      containerPort: 80
     # environment variables
-    env: []
+    env:
+    - name: SECRET_USERNAME
+      value: 'TOP_SECRET'
     # resources
     resources:
       requests:
@@ -46,6 +45,5 @@ cronjobs:
         cpu: '500m'
     # graceful shutdown
     terminationGracePeriodSeconds: 15
-  # restart policy
-  restartPolicy: Never
-```
+    # imagePullPolicy Always/IfNotPresent
+    imagePullPolicy: IfNotPresent

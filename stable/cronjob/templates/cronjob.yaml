@@ -1,69 +1,62 @@
-{{- if .Values.cronjobs }}{{- range $cronjob := .Values.cronjobs }}
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: "{{ $.Release.Name }}-{{ $cronjob.name }}"
+  name: {{ include "cronjob.fullname" . }}
   labels:
-    app.kubernetes.io/instance: "{{ $.Release.Name }}-{{ $cronjob.name }}"
-    app.kubernetes.io/name: {{ $cronjob.name }}
-    app.kubernetes.io/version: {{ $cronjob.version | quote }}
-    app.kubernetes.io/component: "cronjob"
-    app.kubernetes.io/part-of: {{ $.Release.Name }}
-    app.kubernetes.io/managed-by: {{ $.Release.Service }}
-    app.kubernetes.io/environment: {{ $.Values.environment }}
+    app.kubernetes.io/name: {{ include "cronjob.name" . }}
+    helm.sh/chart: {{ include "cronjob.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
-  schedule: "{{ $cronjob.schedule }}"
-  concurrencyPolicy: {{ $cronjob.concurrencyPolicy }}
-  startingDeadlineSeconds: {{ $cronjob.startingDeadlineSeconds }}
-  successfulJobsHistoryLimit: {{ default "3" $cronjob.successfulJobsHistoryLimit }}
-  failedJobsHistoryLimit: {{ default "3" $cronjob.failedJobsHistoryLimit }}
+  # cronjob schedule
+  schedule: {{ .Values.job.schedule }}
+  # Allow parralel execution for this cronjob: Allow, Forbid
+  concurrencyPolicy: {{ .Values.job.concurrencyPolicy }}
+  # only run within x seconds of the scheduled time, otherwise skip the next execution
+  startingDeadlineSeconds: {{ .Values.job.startingDeadlineSeconds }}
+  # specify how many completed and failed jobs should be kept in the kubernetes job history
+  successfulJobsHistoryLimit: {{ .Values.job.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.job.failedJobsHistoryLimit }}
+  # job template
   jobTemplate:
     spec:
       template:
         spec:
+          # containers
           containers:
-          {{- range $container := $cronjob.containers}}
-          - name: {{ $container.name }}
-            # image
-            image: {{ $container.imageRepository }}:{{ $container.imageTag }}
-            # ports
-            {{- if $container.ports }}
-            ports:
-            {{- range $port := $container.ports }}
-            - protocol: {{ $port.protocol }}
-              containerPort: {{ $port.containerPort }}
-            {{- end }}
-            {{- end }}
+          - name: {{ .Chart.Name }}
+            # Image
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
             # environment
-            {{- if $container.env }}
+            {{- if .Values.job.env }}
             env:
-{{ toYaml $container.env | indent 14 }}
+{{ toYaml .Values.job.env | indent 14 }}
             {{- end }}
             # resources
             resources:
-              requests:
-                memory: {{ $container.resources.requests.memory }}
-                cpu: {{ $container.resources.requests.cpu }}
-              limits:
-                memory: {{ $container.resources.limits.memory }}
-                cpu: {{ $container.resources.limits.cpu }}
+              {{- toYaml .Values.resources | nindent 12 }}
             # graceful shutdown
-            terminationGracePeriodSeconds: {{ $container.terminationGracePeriodSeconds }}
-            # imagePullPolicy Always/IfNotPresent
-            imagePullPolicy: {{ default "IfNotPresent" $container.imagePullPolicy }}
-            # healthcheck
-            # - checks, if the container has started
-            {{- if $container.readinessProbe }}
-            readinessProbe:
-{{ toYaml $container.readinessProbe | indent 14 }}
-            {{- end }}
-            # - checks if the container is still healthy
-            {{- if $container.livenessProbe }}
-            livenessProbe:
-{{ toYaml $container.livenessProbe | indent 14 }}
-            {{- end }}
-            # end
-          {{- end }} # foreach container
-          # restartPolicy
-          restartPolicy: {{ default "Never" $cronjob.restartPolicy }}
-{{- end }}{{- end }} # foreach deployment
+            terminationGracePeriodSeconds: {{ .Values.job.terminationGracePeriodSeconds }}
+          # image pull secret
+          {{- if .Values.image.pullSecret -}}
+          imagePullSecrets:
+          - name: {{ .Values.image.pullSecret }}
+          {{- end }}
+          # node selector
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          # affinity
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          # tolerations
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          # restart policy ("OnFailure", "Never")
+          restartPolicy: {{ .Values.job.restartPolicy }}

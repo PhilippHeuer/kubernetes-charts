@@ -1,15 +1,17 @@
-###
-# Global Settings
-###
-id: nginx
-environment: development
+# Default values for template.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
 
-###
-# Cronjobs
-###
-cronjobs:
-- name: app
-  version: '1.0'
+image:
+  repository: nginx
+  tag: stable
+  pullPolicy: IfNotPresent
+  # pullSecret: my_secret
+
+nameOverride: ""
+fullnameOverride: ""
+
+job:
   # cronjob schedule
   schedule: '0 * * * *'
   # Allow parralel execution for this cronjob: Allow, Forbid
@@ -21,29 +23,23 @@ cronjobs:
   failedJobsHistoryLimit: 3
   # restart policy ("OnFailure", "Never")
   restartPolicy: Never
-  # containers
-  containers:
-  - name: app
-    # image
-    imageRepository: docker.io/nginx
-    imageTag: '1.15-alpine'
-    # ports
-    ports:
-    - protocol: TCP
-      containerPort: 80
-    # environment variables
-    env:
-    - name: SECRET_USERNAME
-      value: 'TOP_SECRET'
-    # resources
-    resources:
-      requests:
-        memory: '64Mi'
-        cpu: '250m'
-      limits:
-        memory: '128Mi'
-        cpu: '500m'
-    # graceful shutdown
-    terminationGracePeriodSeconds: 15
-    # imagePullPolicy Always/IfNotPresent
-    imagePullPolicy: IfNotPresent
+  # graceful shutdown
+  terminationGracePeriodSeconds: 30
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
