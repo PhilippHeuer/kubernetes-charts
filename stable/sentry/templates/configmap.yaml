@@ -113,6 +113,7 @@ data:
 
     import os
     import os.path
+    from pip._internal import main as pipmain
 
     CONF_ROOT = os.path.dirname(__file__)
 
@@ -380,4 +381,14 @@ data:
     if 'BITBUCKET_CONSUMER_KEY' in os.environ:
         BITBUCKET_CONSUMER_KEY = env('BITBUCKET_CONSUMER_KEY')
         BITBUCKET_CONSUMER_SECRET = env('BITBUCKET_CONSUMER_SECRET')
+    
+    if 'OIDC_ISSUER' in os.environ:
+        # install plugin
+        # pipmain(['install', 'sentry-auth-oidc'])
+        # configuration
+        OIDC_ISSUER = "Google"
+        OIDC_AUTHORIZATION_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"  # e.g. for Google
+        OIDC_TOKEN_ENDPOINT = "https://www.googleapis.com/oauth2/v4/token"  # e.g. for Google
+        OIDC_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo" # e.g. for Google
+
 {{ .Values.config.sentryConfPy | indent 4 }}

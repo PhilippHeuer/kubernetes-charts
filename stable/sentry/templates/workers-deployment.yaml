@@ -53,22 +53,22 @@ spec:
               name: {{ template "fullname" . }}
               key: sentry-secret
         - name: SENTRY_DB_USER
-          value: {{ default "sentry" .Values.postgresql.postgresUser | quote }}
+          value: {{ default "sentry" .Values.postgresql.postgresqlUsername | quote }}
         - name: SENTRY_DB_NAME
-          value: {{ default "sentry" .Values.postgresql.postgresDatabase | quote }}
+          value: {{ default "sentry" .Values.postgresql.postgresqlDatabase | quote }}
         - name: SENTRY_DB_PASSWORD
           valueFrom:
             secretKeyRef:
-            {{- if .Values.postgresql.existingSecret }}
-              name: {{ .Values.postgresql.existingSecret }}
+            {{- if .Values.postgresql.secretName }}
+              name: {{ .Values.postgresql.secretName }}
             {{- else }}
-              name: {{ template "postgresql.secret" . }}
+              name: {{ template "postgresql.defaultsecret" . }}
             {{- end }}
-              key: postgres-password
+              key: postgresql-password
         - name: SENTRY_POSTGRES_HOST
-          value: {{ template "postgresql.host" . }}
+          value: {{ template "postgresql.remotehost" . }}
         - name: SENTRY_POSTGRES_PORT
-          value: {{ template "postgresql.port" . }}
+          value: {{ template "postgresql.remoteport" . }}
         {{- if or (.Values.redis.enabled) (.Values.redis.password) }}
         - name: SENTRY_REDIS_PASSWORD
           valueFrom:
@@ -103,6 +103,8 @@ spec:
           value: {{ .Values.email.use_tls | quote }}
         - name: SENTRY_SERVER_EMAIL
           value: {{ .Values.email.from_address | quote }}
+        - name: C_FORCE_ROOT
+          value: "true"
 {{- if .Values.worker.env }}
 {{ toYaml .Values.worker.env | indent 8 }}
 {{- end }}
