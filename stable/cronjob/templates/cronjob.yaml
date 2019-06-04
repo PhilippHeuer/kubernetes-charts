@@ -60,3 +60,65 @@ spec:
           {{- end }}
           # restart policy ("OnFailure", "Never")
           restartPolicy: {{ .Values.job.restartPolicy }}
+          # Volume Mounts
+          {{- if .Values.volumeMounts }}
+          volumeMounts:
+{{ toYaml .Values.volumeMounts | indent 12 }}
+          {{- end }}
+      ###
+      # Begin Volumes
+      ###
+      {{- if .Values.volumes }}
+      volumes:
+      {{- range $volume := .Values.volumes }}
+      - name: {{ $volume.name }}
+        ###
+        # Type: ConfigMap
+        ###
+        {{- if $volume.configMap }}
+        configMap:
+          # Static Selector: Name
+          {{- if $volume.configMap.name }}
+          name: {{ $volume.configMap.name }}
+          {{- end }}
+          # Dynamic Selector: Current Release
+          {{- if $volume.configMap.selector }}
+          name: "{{ $.Release.Name }}-{{ $volume.configMap.selector }}"
+          {{- end }}
+        ###
+        # Type: HostPath
+        ###
+        {{- else if $volume.hostPath }}
+        hostPath:
+          # directory location on host
+          path: "{{ $volume.hostPath.path }}"
+          # this field is optional
+          type: DirectoryOrCreate
+        ###
+        # Type: EmptyDir
+        ###
+        {{- else if $volume.emptyDir }}
+        emptyDir: {}
+        ###
+        # PersistentVolumeClaim
+        ###
+        {{- else if $volume.persistentVolumeClaim }}
+        persistentVolumeClaim:
+          # Static Selector
+          {{- if $volume.persistentVolumeClaim.claimName }}
+          claimName: "{{ $volume.persistentVolumeClaim.claimName }}"
+          {{- end }}
+          # Dynamic Selector
+          {{- if $volume.persistentVolumeClaim.claimNameSelector }}
+          claimName: "{{ $.Release.Name }}-{{ $volume.persistentVolumeClaim.claimNameSelector }}"
+          {{- end }}
+        ###
+        # Type: Other
+        ###
+        {{- else }}
+{{ toYaml $volume | indent 8 }}
+        {{- end }}
+      {{- end }}
+      ###
+      # End Volumes
+      ###
