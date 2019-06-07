@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   # cronjob schedule
-  schedule: {{ .Values.job.schedule }}
+  schedule: "{{ .Values.job.schedule }}"
   # Allow parralel execution for this cronjob: Allow, Forbid
   concurrencyPolicy: {{ .Values.job.concurrencyPolicy }}
   # only run within x seconds of the scheduled time, otherwise skip the next execution

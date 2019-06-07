@@ -13,7 +13,7 @@ fullnameOverride: ""
 
 job:
   # cronjob schedule
-  schedule: '0 * * * *'
+  schedule: "0 * * * *"
   # Allow parralel execution for this cronjob: Allow, Forbid
   concurrencyPolicy: Forbid
   # only run within x seconds of the scheduled time, otherwise skip the next execution
