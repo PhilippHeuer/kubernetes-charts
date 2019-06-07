@@ -36,8 +36,6 @@ spec:
             # resources
             resources:
               {{- toYaml .Values.resources | nindent 12 }}
-            # graceful shutdown
-            terminationGracePeriodSeconds: {{ .Values.job.terminationGracePeriodSeconds }}
             # Volume Mounts
             {{- if .Values.volumeMounts }}
             volumeMounts:
@@ -51,17 +49,17 @@ spec:
           # node selector
           {{- with .Values.nodeSelector }}
           nodeSelector:
-            {{- toYaml . | nindent 8 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           # affinity
           {{- with .Values.affinity }}
           affinity:
-            {{- toYaml . | nindent 8 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           # tolerations
           {{- with .Values.tolerations }}
           tolerations:
-            {{- toYaml . | nindent 8 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           # restart policy ("OnFailure", "Never")
           restartPolicy: {{ .Values.job.restartPolicy }}
