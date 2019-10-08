@@ -9,6 +9,14 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.deployment.replicaCount }}
+  strategy:
+    type: {{ .Values.deployment.strategy.type }}
+    {{- if eq .Values.deployment.strategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.deployment.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.deployment.strategy.rollingUpdate.maxSurge }}
+    {{- end }}
+  revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "webservice.name" . }}
@@ -18,15 +26,6 @@ spec:
       labels:
         app.kubernetes.io/name: {{ include "webservice.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-    replicas: 
-    strategy:
-      type: {{ .Values.deployment.strategy.type }}
-      {{- if eq .Values.deployment.strategy.type "RollingUpdate" }}
-      rollingUpdate:
-        maxUnavailable: {{ .Values.deployment.strategy.rollingUpdate.maxUnavailable }}
-        maxSurge: {{ .Values.deployment.strategy.rollingUpdate.maxSurge }}
-      {{- end }}
-    revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
     spec:
       containers:
       - name: {{ .Chart.Name }}
